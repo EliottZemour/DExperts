@@ -92,6 +92,10 @@ class DExpertsGeneration(GPT2Generation):
                 else:
                     antiexpert_logits = base_logits
                 
+                print(type(base_logits))
+                print(base_past)
+                print(base_logits.shape, expert_logits.shape, antiexpert_logits.shape)
+
                 if filter_p < 1.0:
                     base_logits = top_k_top_p_filtering(base_logits, top_p=filter_p)
                 
@@ -114,6 +118,7 @@ class DExpertsGeneration(GPT2Generation):
                         next_token_logits = top_k_top_p_filtering(next_token_logits, top_k=k, top_p=p)
                     # Sample
                     probs = F.softmax(next_token_logits, dim=-1)
+                    print(probs)
                     next_tokens = torch.multinomial(probs, num_samples=1).squeeze(1)
                 else:
                     # Greedy decoding
