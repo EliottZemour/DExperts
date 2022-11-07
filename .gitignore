@@ -20,3 +20,6 @@ notebooks/style_transfer_playground.ipynb
 notebooks/temp_pplm_eval.ipynb
 notebooks/utils.ipynb
 notebooks/reviz_illustrations.ipynb
+.DS_Store
+.gitignore
+.gitignore

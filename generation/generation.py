@@ -18,7 +18,7 @@ from transformers.pipelines import pipeline
 from generation.gpt2_generation import GPT2Generation
 from generation.dexperts_generation import DExpertsGeneration
 from generation.dexperts_gpt3_generation import DExpertsGPT3Generation
-from generation.pplm_generation import PPLMGeneration
+# from generation.pplm_generation import PPLMGeneration
 from utils.constants import OPENAI_API_KEY
 from utils.utils import batchify, load_cache
 
