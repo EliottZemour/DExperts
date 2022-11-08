@@ -30,12 +30,12 @@ class DExpertsGeneration(GPT2Generation):
         self.base_model = GPT2LMHeadModel.from_pretrained(base_model).to(self.device)
         
         if antiexpert_model:
-            self.antiexpert = GPT2LMHeadModel.from_pretrained(antiexpert_model).to(self.device)
+            self.antiexpert = GPT2LMHeadModel.from_pretrained(antiexpert_model, use_auth_token=True).to(self.device)
         else:
             self.antiexpert = None
         
         if expert_model:
-            self.expert = GPT2LMHeadModel.from_pretrained(expert_model).to(self.device)
+            self.expert = GPT2LMHeadModel.from_pretrained(expert_model, use_auth_token=True).to(self.device)
         else:
             self.expert = None
         
@@ -73,35 +73,45 @@ class DExpertsGeneration(GPT2Generation):
         if self.antiexpert:
             self.antiexpert.eval()
         with torch.no_grad():
+            # max_len = 1
             for step in range(max_len):
                 # base model prediction
-                base_logits, base_past = self.base_model(
-                    input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs)
+                base_logits = self.base_model(
+                    input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs).logits
                 
                 # expert prediction
                 if self.expert:
-                    expert_logits, expert_past = self.expert(
-                        input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs)
+                    expert_logits = self.expert(
+                        input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs).logits
                 else:
                     expert_logits = base_logits
                 
                 # antiexpert prediction
                 if self.antiexpert:
-                    antiexpert_logits, antiexpert_past = self.antiexpert(
-                        input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs)
+                    antiexpert_logits = self.antiexpert(
+                        input_ids, attention_mask=attention_mask, position_ids=position_ids, **model_kwargs).logits
                 else:
                     antiexpert_logits = base_logits
+        
+                #return base_logits, expert_logits, antiexpert_logits
+                # print(type(base_logits))
+                # print(base_past.isna)
+                # print(base_logits.shape, expert_logits.shape, antiexpert_logits.shape)
                 
-                print(type(base_logits))
-                print(base_past)
-                print(base_logits.shape, expert_logits.shape, antiexpert_logits.shape)
-
                 if filter_p < 1.0:
                     base_logits = top_k_top_p_filtering(base_logits, top_p=filter_p)
-                
+                # print(f"{expert_logits.isnan().any()=}")
+                # print(f"{antiexpert_logits.isnan().any()=}")
                 # DExperts
-                alpha = torch.tensor(alpha).to(self.device)
-                ensemble_logits = base_logits + alpha * (expert_logits - antiexpert_logits)
+                # alpha = torch.tensor(alpha).to(self.device)
+                # tmp = base_logits - base_logits
+                # print(alpha)
+                # print(tmp)
+                # print(tmp.isnan().any())
+                if self.antiexpert is not None or self.expert is not None:
+                    ensemble_logits = base_logits + alpha * (expert_logits - antiexpert_logits)
+                else:
+                    ensemble_logits = base_logits #+ alpha * (expert_logits - antiexpert_logits)
 
                 # in the first decoding step, we want to use the 'real' last position for each sentence
                 if step == 0:
@@ -118,7 +128,7 @@ class DExpertsGeneration(GPT2Generation):
                         next_token_logits = top_k_top_p_filtering(next_token_logits, top_k=k, top_p=p)
                     # Sample
                     probs = F.softmax(next_token_logits, dim=-1)
-                    print(probs)
+                    
                     next_tokens = torch.multinomial(probs, num_samples=1).squeeze(1)
                 else:
                     # Greedy decoding
