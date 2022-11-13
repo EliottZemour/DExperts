@@ -152,5 +152,5 @@ class DExpertsGeneration(GPT2Generation):
                 position_ids = torch.cat([position_ids, (position_ids[:, -1] + 1).unsqueeze(-1)], dim=1)
 
         decoded_outputs = [self.tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-                           for output in input_ids[:, input_seq_len:]]
+                           for output in input_ids[:, :]]
         return decoded_outputs
