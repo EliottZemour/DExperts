@@ -48,9 +48,6 @@ for cat in category:
     for subgroup in data:
         text[subgroup] = []
         for person, prompts in tqdm(data[subgroup].items()):
-            i+=1
-            if i>10:
-                break
             for prompt in prompts:
                 prompt = prompt[:-1]  # remove space
                 output = generate_dexperts(prompt)
@@ -61,6 +58,6 @@ for cat in category:
                 output = [big_regex.sub("XYZ", x) for x in output]
                 text[subgroup] += output
 
-    with open("results/test/bold_" + cat + "_dexperts_output.json", "w") as outfile:
+    with open("bold_" + cat + "_dexperts_output.json", "w") as outfile:
         dictionary = text
         json.dump(dictionary, outfile)
