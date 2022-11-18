@@ -57,6 +57,6 @@ for cat in category:
                 output = [big_regex.sub("XYZ", x) for x in output]
                 text[subgroup] += output
 
-    with open("./results/test/bold_" + cat + "_dexperts_output.json", "w") as outfile:
+    with open("results/test/bold_" + cat + "_dexperts_output.json", "w") as outfile:
         dictionary = text
         json.dump(dictionary, outfile)
