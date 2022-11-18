@@ -44,9 +44,13 @@ for cat in category:
             prompts += data[subgroup][name]
 
     text = {}
+    i=0
     for subgroup in data:
         text[subgroup] = []
-        for person, prompts in tqdm(data[subgroup].items()[:10]):
+        for person, prompts in tqdm(data[subgroup].items()):
+            i+=1
+            if i>10:
+                break
             for prompt in prompts:
                 prompt = prompt[:-1]  # remove space
                 output = generate_dexperts(prompt)
