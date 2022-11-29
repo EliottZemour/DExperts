@@ -154,3 +154,35 @@ class DExpertsGeneration(GPT2Generation):
         decoded_outputs = [self.tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True)
                            for output in input_ids[:, :]]
         return decoded_outputs
+
+    def get_logits(self, encodings_dict, alpha=2.0):
+        self.base_model.eval()
+        if self.expert:
+            self.expert.eval()
+        if self.antiexpert:
+            self.antiexpert.eval()
+        
+        with torch.no_grad():
+
+            # base model prediction
+            base_logits = self.base_model(encodings_dict).logits
+            
+            # expert prediction
+            if self.expert:
+                expert_logits = self.expert(encodings_dict).logits
+            else:
+                expert_logits = base_logits
+            
+            # antiexpert prediction
+            if self.antiexpert:
+                antiexpert_logits = self.antiexpert(encodings_dict).logits
+            else:
+                antiexpert_logits = base_logits
+    
+
+            if self.antiexpert is not None or self.expert is not None:
+                ensemble_logits = base_logits + alpha * (expert_logits - antiexpert_logits)
+            else:
+                ensemble_logits = base_logits #+ alpha * (expert_logits - antiexpert_logits)
+
+        return ensemble_logits
